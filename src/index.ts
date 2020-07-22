@@ -49,11 +49,6 @@ export interface Model<T extends Object> {
     id: Id
 
     /**
-     * name of the model's collection.
-     */
-    name: string
-
-    /**
      * database connection.
      */
     database: mongo.Db
@@ -87,8 +82,8 @@ export interface Model<T extends Object> {
     /**
      * update a single document in the collection.
      */
-    update(id: Id, updateSpec?: Partial<T>,
-        qry?: object, opts?: object): Future<boolean>
+    update(id: Id, updateSpec?: object, qry?: object,
+        opts?: object): Future<boolean>
 
     /**
      * updateAll documents in the collection.
@@ -113,7 +108,80 @@ export interface Model<T extends Object> {
     /**
      * aggregate runs a pipeline against documents in the collection.
      */
-    aggregate(pipeline: object[], opts: object ): Future<Object[]>
+    aggregate(pipeline: object[], opts: object): Future<Object[]>
+
+}
+
+/**
+ * AbstractModel provides a base implementation for making Model classes from
+ * this library.
+ */
+export abstract class AbstractModel<T extends Object> implements Model<T> {
+
+    constructor(
+        public id: Id,
+        public database: mongo.Db,
+        public collection: mongo.Collection<any>) { }
+
+    create(data: T): Future<Id> {
+
+        return create<T>(this, data);
+    }
+
+    createAll(data: T[]): Future<Id[]> {
+
+        return createAll(this, data);
+
+    }
+
+    search(filter: object, opts?: object): Future<T[]> {
+
+        return search(this, filter, opts);
+
+    }
+
+    get(id: Id, qry?: object, opts?: object): Future<Maybe<T>> {
+
+        return get(this, id, qry, opts);
+
+    }
+
+    update(id: Id, updateSpec: object, qry?: object,
+        opts?: object): Future<boolean> {
+
+        return update(this, id, updateSpec, qry, opts);
+
+    }
+
+    updateAll(qry: object, updateSpec: object, opts: object): Future<number> {
+
+        return updateAll(this, updateSpec, qry, opts);
+
+    }
+
+    remove(id: Id, qry?: object, opts?: object): Future<boolean> {
+
+        return remove(this, id, qry, opts);
+
+    }
+
+    removeAll(qry: object, opts: object): Future<number> {
+
+        return removeAll(this, qry, opts);
+
+    }
+
+    count(qry: object): Future<number> {
+
+        return count(this, qry);
+
+    }
+
+    aggregate(pipeline: object[], opts: object): Future<Object[]> {
+
+        return aggregate(this, pipeline, opts);
+
+    }
 
 }
 

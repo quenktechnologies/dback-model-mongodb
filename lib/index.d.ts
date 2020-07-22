@@ -31,10 +31,6 @@ export interface Model<T extends Object> {
      */
     id: Id;
     /**
-     * name of the model's collection.
-     */
-    name: string;
-    /**
      * database connection.
      */
     database: mongo.Db;
@@ -62,7 +58,7 @@ export interface Model<T extends Object> {
     /**
      * update a single document in the collection.
      */
-    update(id: Id, updateSpec?: Partial<T>, qry?: object, opts?: object): Future<boolean>;
+    update(id: Id, updateSpec?: object, qry?: object, opts?: object): Future<boolean>;
     /**
      * updateAll documents in the collection.
      */
@@ -82,6 +78,26 @@ export interface Model<T extends Object> {
     /**
      * aggregate runs a pipeline against documents in the collection.
      */
+    aggregate(pipeline: object[], opts: object): Future<Object[]>;
+}
+/**
+ * AbstractModel provides a base implementation for making Model classes from
+ * this library.
+ */
+export declare abstract class AbstractModel<T extends Object> implements Model<T> {
+    id: Id;
+    database: mongo.Db;
+    collection: mongo.Collection<any>;
+    constructor(id: Id, database: mongo.Db, collection: mongo.Collection<any>);
+    create(data: T): Future<Id>;
+    createAll(data: T[]): Future<Id[]>;
+    search(filter: object, opts?: object): Future<T[]>;
+    get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>;
+    update(id: Id, updateSpec: object, qry?: object, opts?: object): Future<boolean>;
+    updateAll(qry: object, updateSpec: object, opts: object): Future<number>;
+    remove(id: Id, qry?: object, opts?: object): Future<boolean>;
+    removeAll(qry: object, opts: object): Future<number>;
+    count(qry: object): Future<number>;
     aggregate(pipeline: object[], opts: object): Future<Object[]>;
 }
 /**
