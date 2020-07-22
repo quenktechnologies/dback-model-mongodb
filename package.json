@@ -1,0 +1,14 @@
+{
+  "name": "@quenk/backdey-model-mongodb",
+  "version": "0.0.3",
+  "description": "Model implementation type for MongoDB based projects.",
+  "devDependencies": {
+    "@types/mongodb": "^3.5.25",
+    "typedoc": "^0.17.8",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@quenk/noni": "^1.39.3",
+    "@quenk/noni-mongodb": "^0.3.2"
+  }
+}
