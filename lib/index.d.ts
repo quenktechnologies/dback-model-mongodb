@@ -85,10 +85,10 @@ export interface Model<T extends Object> {
  * this library.
  */
 export declare abstract class AbstractModel<T extends Object> implements Model<T> {
-    id: Id;
     database: mongo.Db;
     collection: mongo.Collection<any>;
-    constructor(id: Id, database: mongo.Db, collection: mongo.Collection<any>);
+    constructor(database: mongo.Db, collection: mongo.Collection<any>);
+    abstract id: Id;
     create(data: T): Future<Id>;
     createAll(data: T[]): Future<Id[]>;
     search(filter: object, opts?: object): Future<T[]>;

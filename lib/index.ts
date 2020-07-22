@@ -119,9 +119,10 @@ export interface Model<T extends Object> {
 export abstract class AbstractModel<T extends Object> implements Model<T> {
 
     constructor(
-        public id: Id,
         public database: mongo.Db,
         public collection: mongo.Collection<any>) { }
+
+    abstract id: Id;
 
     create(data: T): Future<Id> {
 
@@ -200,7 +201,8 @@ export const create =
 
             return mDoc.isJust() ?
                 pure(<Id>mDoc.get()[model.id]) :
-                raise<Id>(new Error('create(): Could not retrieve target document!'));
+                raise<Id>(new Error('create(): Could not retrieve '+
+                  'target document!'));
 
         });
 
