@@ -1,6 +1,6 @@
 {
   "name": "@quenk/backdey-model-mongodb",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Model implementation type for MongoDB based projects.",
   "devDependencies": {
     "@types/mongodb": "^3.5.25",
