@@ -2,13 +2,27 @@
   "name": "@quenk/backdey-model-mongodb",
   "version": "0.1.1",
   "description": "Model implementation type for MongoDB based projects.",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+
+    "test": "./node_modules/.bin/mocha $(find test -name *_test.ts)"
+
+  },
   "devDependencies": {
+    "@quenk/backdey-mongodb-testkit": "^1.0.4",
+    "@quenk/test": "^2.2.4",
+    "@types/mocha": "^8.0.0",
     "@types/mongodb": "^3.5.25",
+    "mocha": "^8.0.1",
+    "ts-node": "^8.10.2",
     "typedoc": "^0.17.8",
     "typescript": "^3.9.7"
   },
   "dependencies": {
     "@quenk/noni": "^1.39.3",
-    "@quenk/noni-mongodb": "^0.3.2"
+    "@quenk/noni-mongodb": "^0.3.3"
   }
 }

@@ -1,5 +1,9 @@
-import * as noniMongo from '@quenk/noni-mongodb/lib/database/collection';
+/**
+ * This module provides an interface an abstract class for implementing a basic
+ * model in application built with tendril and mongodb.
+ */
 import * as mongo from 'mongodb';
+import * as noniMongo from '@quenk/noni-mongodb/lib/database/collection';
 
 import {
     Future,
@@ -9,7 +13,7 @@ import {
 } from '@quenk/noni/lib/control/monad/future';
 import { Maybe } from '@quenk/noni/lib/data/maybe';
 import { Object } from '@quenk/noni/lib/data/jsonx';
-import { merge } from '@quenk/noni/lib/data/record';
+import { empty, mapTo, rmerge } from '@quenk/noni/lib/data/record';
 
 /**
  * Id of a document.
@@ -39,6 +43,10 @@ export type JoinRef = [
 /**
  * Model provides an API for common CRUD operations on documents in a
  * specific collection.
+ *
+ * The design here is basic for writing single documents and reading them back
+ * from the database. For more advanced tasks, additional methods should be
+ * created on implementers.
  */
 export interface Model<T extends Object> {
 
@@ -52,6 +60,12 @@ export interface Model<T extends Object> {
      * database connection.
      */
     database: mongo.Db
+
+    /**
+     * refs is a list of join references to be honored when retrieving documents
+     * for the model.
+     */
+    refs: JoinRef[]
 
     /**
      * collection provides the driver handle for the actual
@@ -75,20 +89,24 @@ export interface Model<T extends Object> {
     search(filter: object, opts?: object): Future<T[]>
 
     /**
-     * get a single record, usually by its id.
-     */
-    get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>
-
-    /**
      * update a single document in the collection.
+     *
+     * This uses the $set operation.
      */
-    update(id: Id, updateSpec?: object, qry?: object,
+    update(id: Id, changes?: object, qry?: object,
         opts?: object): Future<boolean>
 
     /**
      * updateAll documents in the collection.
+     *
+     * This uses the $set operation.
      */
-    updateAll(qry: object, updateSpec: object, opts: object): Future<number>
+    updateAll(qry: object, changes: object, opts?: object): Future<number>
+
+    /**
+     * get a single record, usually by its id.
+     */
+    get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>
 
     /**
      * remove a single document by id.
@@ -98,7 +116,7 @@ export interface Model<T extends Object> {
     /**
      * removeAll documents in the collection that match the query.
      */
-    removeAll(qry: object, opts: object): Future<number>
+    removeAll(qry: object, opts?: object): Future<number>
 
     /**
      * count the number of documents that match the query.
@@ -124,6 +142,8 @@ export abstract class AbstractModel<T extends Object> implements Model<T> {
 
     abstract id: Id;
 
+    refs: JoinRef[] = [];
+
     create(data: T): Future<Id> {
 
         return create<T>(this, data);
@@ -137,26 +157,26 @@ export abstract class AbstractModel<T extends Object> implements Model<T> {
 
     search(filter: object, opts?: object): Future<T[]> {
 
-        return search(this, filter, opts);
+        return search(this, filter, opts, this.refs);
+
+    }
+
+    update(id: Id, changes: object, qry?: object,
+        opts?: object): Future<boolean> {
+
+        return update(this, id, changes, qry, opts);
+
+    }
+
+    updateAll(qry: object, changes: object, opts?: object): Future<number> {
+
+        return updateAll(this, qry, changes, opts);
 
     }
 
     get(id: Id, qry?: object, opts?: object): Future<Maybe<T>> {
 
-        return get(this, id, qry, opts);
-
-    }
-
-    update(id: Id, updateSpec: object, qry?: object,
-        opts?: object): Future<boolean> {
-
-        return update(this, id, updateSpec, qry, opts);
-
-    }
-
-    updateAll(qry: object, updateSpec: object, opts: object): Future<number> {
-
-        return updateAll(this, updateSpec, qry, opts);
+        return get(this, id, qry, opts, this.refs);
 
     }
 
@@ -166,7 +186,7 @@ export abstract class AbstractModel<T extends Object> implements Model<T> {
 
     }
 
-    removeAll(qry: object, opts: object): Future<number> {
+    removeAll(qry: object, opts?: object): Future<number> {
 
         return removeAll(this, qry, opts);
 
@@ -178,13 +198,32 @@ export abstract class AbstractModel<T extends Object> implements Model<T> {
 
     }
 
-    aggregate(pipeline: object[], opts: object): Future<Object[]> {
+    aggregate(pipeline: object[], opts?: object): Future<Object[]> {
 
         return aggregate(this, pipeline, opts);
 
     }
 
 }
+
+const getIdQry =
+    <T extends Object>(model: Model<T>, id: Id, qry: object): object => {
+
+        let idQry = {
+
+            $or: [
+
+                { [model.id]: id },
+
+                { [model.id]: Number(id) }
+
+            ]
+
+        };
+
+        return empty(qry) ? idQry : { $and: [idQry, qry] };
+
+    }
 
 /**
  * create a new document using a Model.
@@ -201,8 +240,8 @@ export const create =
 
             return mDoc.isJust() ?
                 pure(<Id>mDoc.get()[model.id]) :
-                raise<Id>(new Error('create(): Could not retrieve '+
-                  'target document!'));
+                raise<Id>(new Error('create(): Could not retrieve ' +
+                    'target document!'));
 
         });
 
@@ -217,7 +256,7 @@ export const createAll =
 
             let result = yield noniMongo.insertMany(model.collection, data);
 
-            let qry = { _id: result.insertedIds };
+            let qry = { _id: { $in: mapTo(result.insertedIds, id => id) } };
 
             let opts = { projection: { [model.id]: 1 } };
 
@@ -241,7 +280,9 @@ export const search = <T extends Object>(
     refs: JoinRef[] = []): Future<T[]> =>
     doFuture(function*() {
 
-        let results = yield noniMongo.find(model.collection, qry, opts);
+        let actualOpts = rmerge({ projection: { _id: false } }, <Object>opts);
+
+        let results = yield noniMongo.find(model.collection, qry, actualOpts);
 
         for (let i = 0; i < refs.length; i++) {
 
@@ -260,29 +301,23 @@ export const search = <T extends Object>(
 /**
  * update a single document in the Model's collection given its id.
  *
- * Additional query parameters can also be supplied.
+ * The operation takes place using the $set operator. Additional query 
+ * parameters can be supplied to affect the query via the qry parameter.
  *
- * @returns - True if any documents were affected, false otherwise.
+ * @returns - True if any single document was affected, false otherwise.
  */
 export const update = <T extends Object>(
     model: Model<T>,
     id: Id,
-    updateSpec: object,
+    changes: object,
     qry: object = {},
     opts: object = {}): Future<boolean> => {
 
-    let query = merge(qry, {
+    let spec = { $set: changes };
 
-        $or: [
+    let actualQry = getIdQry(model, id, qry);
 
-            { [model.id]: id },
-
-            { [model.id]: Number(id) }
-
-        ]
-    });
-
-    return noniMongo.updateOne(model.collection, query, updateSpec, opts)
+    return noniMongo.updateOne(model.collection, actualQry, spec, opts)
         .map(r => r.modifiedCount > 0);
 
 }
@@ -290,15 +325,18 @@ export const update = <T extends Object>(
 /**
  * updateAll documents in the Model's collection that match the query.
  *
+ * Uses $set just like update()
  * @returns - The number of documents affected.
  */
 export const updateAll = <T extends Object>(
     model: Model<T>,
     qry: object = {},
-    updateSpec: object,
+    changes: object,
     opts: object = {}): Future<number> => {
 
-    return noniMongo.updateMany(model.collection, qry, updateSpec, opts)
+    let spec = { $set: changes };
+
+    return noniMongo.updateMany(model.collection, qry, spec, opts)
         .map(r => r.modifiedCount);
 
 }
@@ -317,34 +355,23 @@ export const get = <T extends Object>(
     refs: JoinRef[] = []): Future<Maybe<T>> =>
     doFuture(function*() {
 
-        let q = merge(qry, {
+        let actualQry = getIdQry(model, id, qry);
 
-            $or: [
-
-                { [model.id]: id },
-
-                { [model.id]: Number(id) }
-
-            ]
-        });
-
-        let mHit = yield noniMongo.findOne(model.collection, q, opts);
+        let mHit = yield noniMongo.findOne(model.collection, actualQry, opts);
 
         if (mHit.isNothing()) return pure(mHit);
-
-        let hit = mHit.get();
 
         for (let i = 0; i < refs.length; i++) {
 
             let [colname, lkey, fkey, fields] = refs[i];
             let col = model.database.collection(colname);
 
-            hit = yield noniMongo.populate(col, [lkey, fkey],
-                hit, fields);
+            mHit = yield noniMongo.populate(col, [lkey, fkey],
+                mHit, fields);
 
         }
 
-        return pure(hit);
+        return pure(mHit);
 
     });
 
@@ -357,19 +384,9 @@ export const remove = <T extends Object>(
     qry: object = {},
     opts: object = {}, ): Future<boolean> => {
 
-    let q = merge(qry, {
+    let actualQry = getIdQry(model, id, qry);
 
-        $or: [
-
-            { [model.id]: id },
-
-            { [model.id]: Number(id) }
-
-        ]
-
-    });
-
-    return noniMongo.deleteOne(model.collection, q, opts)
+    return noniMongo.deleteOne(model.collection, actualQry, opts)
         .map(r => (<number>r.deletedCount) > 0);
 
 }
@@ -385,7 +402,6 @@ export const removeAll = <T extends Object>(
     noniMongo.deleteMany(model.collection, qry, opts)
         .map(r => <number>r.deletedCount);
 
-
 /**
  * count the documents in a Model's collection that match the specified query.
  */
@@ -394,7 +410,6 @@ export const count = <T extends Object>(
     qry: object,
     opts: object = {}): Future<number> =>
     noniMongo.count(model.collection, qry, opts)
-
 
 /**
  * aggregate runs an aggregation pipeline on a Model's collection.
