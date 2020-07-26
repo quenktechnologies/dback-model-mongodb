@@ -1,15 +1,13 @@
 {
   "name": "@quenk/backdey-model-mongodb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Model implementation type for MongoDB based projects.",
   "main": "lib/index.js",
   "files": [
     "lib"
   ],
   "scripts": {
-
     "test": "./node_modules/.bin/mocha $(find test -name *_test.ts)"
-
   },
   "devDependencies": {
     "@quenk/backdey-mongodb-testkit": "^1.0.4",
