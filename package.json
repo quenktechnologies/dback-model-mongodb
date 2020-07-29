@@ -1,6 +1,6 @@
 {
   "name": "@quenk/backdey-model-mongodb",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Model implementation type for MongoDB based projects.",
   "main": "lib/index.js",
   "files": [
