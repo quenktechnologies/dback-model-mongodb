@@ -131,10 +131,10 @@ export interface Model<T extends Object> {
 }
 
 /**
- * AbstractModel provides a base implementation for making Model classes from
+ * BaseModel provides a base implementation for making Model classes from
  * this library.
  */
-export abstract class AbstractModel<T extends Object> implements Model<T> {
+export abstract class BaseModel<T extends Object> implements Model<T> {
 
     constructor(
         public database: mongo.Db,

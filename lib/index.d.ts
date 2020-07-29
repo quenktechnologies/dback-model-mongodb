@@ -98,10 +98,10 @@ export interface Model<T extends Object> {
     aggregate(pipeline: object[], opts: object): Future<Object[]>;
 }
 /**
- * AbstractModel provides a base implementation for making Model classes from
+ * BaseModel provides a base implementation for making Model classes from
  * this library.
  */
-export declare abstract class AbstractModel<T extends Object> implements Model<T> {
+export declare abstract class BaseModel<T extends Object> implements Model<T> {
     database: mongo.Db;
     collection: mongo.Collection<any>;
     constructor(database: mongo.Db, collection: mongo.Collection<any>);

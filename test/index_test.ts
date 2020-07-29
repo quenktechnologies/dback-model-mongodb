@@ -11,7 +11,7 @@ import { Type } from '@quenk/noni/lib/data/type';
 
 let dbkit = new Testkit({ dropDatabase: true, removeAllCollections: true });
 
-class Instance extends lib.AbstractModel<Type> {
+class Instance extends lib.BaseModel<Type> {
 
     id = 'id';
 
