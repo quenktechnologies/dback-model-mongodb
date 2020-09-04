@@ -138,14 +138,14 @@ export declare const search: <T extends Object>(model: Model<T>, qry: object, op
  * The operation takes place using the $set operator. Additional query
  * parameters can be supplied to affect the query via the qry parameter.
  *
- * @returns - True if any single document was affected, false otherwise.
+ * @returns - true if any single document matched the query.
  */
 export declare const update: <T extends Object>(model: Model<T>, id: Id, changes: object, qry?: object, opts?: object) => Future<boolean>;
 /**
  * updateAll documents in the Model's collection that match the query.
  *
  * Uses $set just like update()
- * @returns - The number of documents affected.
+ * @returns - The number of documents that matched the query.
  */
 export declare const updateAll: <T extends Object>(model: Model<T>, qry: object | undefined, changes: object, opts?: object) => Future<number>;
 /**

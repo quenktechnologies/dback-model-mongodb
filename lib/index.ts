@@ -304,7 +304,7 @@ export const search = <T extends Object>(
  * The operation takes place using the $set operator. Additional query 
  * parameters can be supplied to affect the query via the qry parameter.
  *
- * @returns - True if any single document was affected, false otherwise.
+ * @returns - true if any single document matched the query.
  */
 export const update = <T extends Object>(
     model: Model<T>,
@@ -318,7 +318,7 @@ export const update = <T extends Object>(
     let actualQry = getIdQry(model, id, qry);
 
     return noniMongo.updateOne(model.collection, actualQry, spec, opts)
-        .map(r => r.modifiedCount > 0);
+        .map(r => r.matchedCount > 0);
 
 }
 
@@ -326,7 +326,7 @@ export const update = <T extends Object>(
  * updateAll documents in the Model's collection that match the query.
  *
  * Uses $set just like update()
- * @returns - The number of documents affected.
+ * @returns - The number of documents that matched the query.
  */
 export const updateAll = <T extends Object>(
     model: Model<T>,
@@ -337,7 +337,7 @@ export const updateAll = <T extends Object>(
     let spec = { $set: changes };
 
     return noniMongo.updateMany(model.collection, qry, spec, opts)
-        .map(r => r.modifiedCount);
+        .map(r => r.matchedCount);
 
 }
 
