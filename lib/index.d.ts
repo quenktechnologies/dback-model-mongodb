@@ -23,7 +23,12 @@ export declare type CollectionName = string;
  *
  * Use sparingly.
  */
-export declare type JoinRef = [CollectionName, noniMongo.LocalKey, noniMongo.ForeignKey, object];
+export declare type JoinRef = [
+    CollectionName,
+    noniMongo.LocalKey,
+    noniMongo.ForeignKey,
+    object
+];
 /**
  * Model provides an API for common CRUD operations on documents in a
  * specific collection.
