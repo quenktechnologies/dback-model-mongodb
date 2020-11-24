@@ -1,6 +1,6 @@
 {
   "name": "@quenk/dback-model-mongodb",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Model implementation type for MongoDB based projects.",
   "main": "lib/index.js",
   "files": [
