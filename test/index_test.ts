@@ -212,6 +212,48 @@ describe('AbstractModel', () => {
 
     })
 
+    describe('unsafeUpdate()', function() {
+
+        it('should update documents', () => toPromise(doFuture(function*() {
+
+            let model = new Instance(dbkit.db, dbkit.db.collection('orders'));
+
+            let orders = [
+                { id: 1, customer: 'Sally', items: [] },
+                { id: 2, customer: 'Yui', items: [] },
+                { id: 3, customer: 'Sally', items: [] }
+            ];
+
+            yield dbkit.populate('orders', orders);
+
+            let n = yield model.unsafeUpdate({ customer: 'Sally' },
+                { $set: { customer: 'Hatty' }});
+
+            let docs = yield dbkit.find('orders', { customer: 'Hatty' },
+                { projection: { _id: 0 } });
+
+            return attempt(() => {
+
+                assert(n).equal(2);
+                assert(docs.length).equal(2);
+                assert(docs).equate([{
+                    id: 1,
+                    customer: 'Hatty',
+                    items: []
+                },
+                {
+                    id: 3,
+                    customer: 'Hatty',
+                    items: []
+                }
+                ]);
+
+            });
+
+        })));
+
+    })
+
     describe('get()', () => {
 
         it('should find a document', () => toPromise(doFuture(function*() {

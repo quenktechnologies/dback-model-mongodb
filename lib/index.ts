@@ -104,6 +104,15 @@ export interface Model<T extends Object> {
     updateAll(qry: object, changes: object, opts?: object): Future<number>
 
     /**
+     * unsafeUpdate allows for an update command to be executed using a 
+     * custom query and update operator(s).
+     *
+     * Care should be taken when using this method as one can easily accidentally
+     * overwrite data!
+     */
+    unsafeUpdate(qry: object, spec: object, opts?: object): Future<number>
+
+    /**
      * get a single record, usually by its id.
      */
     get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>
@@ -171,6 +180,12 @@ export abstract class BaseModel<T extends Object> implements Model<T> {
     updateAll(qry: object, changes: object, opts?: object): Future<number> {
 
         return updateAll(this, qry, changes, opts);
+
+    }
+
+    unsafeUpdate(qry: object, spec: object, opts?: object): Future<number> {
+
+        return unsafeUpdate(this, qry, spec, opts);
 
     }
 
@@ -342,6 +357,22 @@ export const updateAll = <T extends Object>(
 }
 
 /**
+ * unsafeUpdate allows a raw update operation to be performed.
+ *
+ * @returns - The number of documents that matched the query.
+ */
+export const unsafeUpdate = <T extends Object>(
+    model: Model<T>,
+    qry: object = {},
+    spec: object,
+    opts: object = {}): Future<number> => {
+
+    return noniMongo.updateMany(model.collection, qry, spec, opts)
+        .map(r => r.matchedCount);
+
+}
+
+/**
  * get a single document from a Model's collection.
  *
  * If refs is specified, each one will be merged into the document.
@@ -382,7 +413,7 @@ export const remove = <T extends Object>(
     model: Model<T>,
     id: Id,
     qry: object = {},
-    opts: object = {}, ): Future<boolean> => {
+    opts: object = {},): Future<boolean> => {
 
     let actualQry = getIdQry(model, id, qry);
 
@@ -398,7 +429,7 @@ export const remove = <T extends Object>(
 export const removeAll = <T extends Object>(
     model: Model<T>,
     qry: object = {},
-    opts: object = {}, ): Future<number> =>
+    opts: object = {},): Future<number> =>
     noniMongo.deleteMany(model.collection, qry, opts)
         .map(r => <number>r.deletedCount);
 

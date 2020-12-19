@@ -82,6 +82,14 @@ export interface Model<T extends Object> {
      */
     updateAll(qry: object, changes: object, opts?: object): Future<number>;
     /**
+     * unsafeUpdate allows for an update command to be executed using a
+     * custom query and update operator(s).
+     *
+     * Care should be taken when using this method as one can easily accidentally
+     * overwrite data!
+     */
+    unsafeUpdate(qry: object, spec: object, opts?: object): Future<number>;
+    /**
      * get a single record, usually by its id.
      */
     get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>;
@@ -117,6 +125,7 @@ export declare abstract class BaseModel<T extends Object> implements Model<T> {
     search(filter: object, opts?: object): Future<T[]>;
     update(id: Id, changes: object, qry?: object, opts?: object): Future<boolean>;
     updateAll(qry: object, changes: object, opts?: object): Future<number>;
+    unsafeUpdate(qry: object, spec: object, opts?: object): Future<number>;
     get(id: Id, qry?: object, opts?: object): Future<Maybe<T>>;
     remove(id: Id, qry?: object, opts?: object): Future<boolean>;
     removeAll(qry: object, opts?: object): Future<number>;
@@ -153,6 +162,12 @@ export declare const update: <T extends Object>(model: Model<T>, id: Id, changes
  * @returns - The number of documents that matched the query.
  */
 export declare const updateAll: <T extends Object>(model: Model<T>, qry: object | undefined, changes: object, opts?: object) => Future<number>;
+/**
+ * unsafeUpdate allows a raw update operation to be performed.
+ *
+ * @returns - The number of documents that matched the query.
+ */
+export declare const unsafeUpdate: <T extends Object>(model: Model<T>, qry: object | undefined, spec: object, opts?: object) => Future<number>;
 /**
  * get a single document from a Model's collection.
  *
