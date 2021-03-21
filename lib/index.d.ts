@@ -14,6 +14,10 @@ import { Object } from '@quenk/noni/lib/data/jsonx';
  */
 export declare type Id = string | number;
 /**
+ * IdMode indicates how the id for a document is generated.
+ */
+export declare type IdMode = string;
+/**
  * CollectionName is the name of a collection.
  */
 export declare type CollectionName = string;
@@ -43,6 +47,11 @@ export interface Model<T extends Object> {
      * document in the collection.
      */
     id: Id;
+    /**
+     * idMode can be used in some apps to determine how to generate an an id
+     * for a new document instance in the target collection.
+     */
+    idMode: IdMode;
     /**
      * database connection.
      */
@@ -118,7 +127,8 @@ export declare abstract class BaseModel<T extends Object> implements Model<T> {
     database: mongo.Db;
     collection: mongo.Collection<any>;
     constructor(database: mongo.Db, collection: mongo.Collection<any>);
-    abstract id: Id;
+    id: string;
+    idMode: string;
     refs: JoinRef[];
     create(data: T): Future<Id>;
     createAll(data: T[]): Future<Id[]>;

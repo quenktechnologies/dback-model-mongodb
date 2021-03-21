@@ -23,6 +23,11 @@ import { empty, mapTo, rmerge } from '@quenk/noni/lib/data/record';
 export type Id = string | number;
 
 /**
+ * IdMode indicates how the id for a document is generated.
+ */
+export type IdMode = string;
+
+/**
  * CollectionName is the name of a collection.
  */
 export type CollectionName = string;
@@ -55,6 +60,12 @@ export interface Model<T extends Object> {
      * document in the collection.
      */
     id: Id
+
+  /**
+   * idMode can be used in some apps to determine how to generate an an id
+   * for a new document instance in the target collection.
+   */
+    idMode: IdMode
 
     /**
      * database connection.
@@ -149,7 +160,9 @@ export abstract class BaseModel<T extends Object> implements Model<T> {
         public database: mongo.Db,
         public collection: mongo.Collection<any>) { }
 
-    abstract id: Id;
+    id = 'id';
+
+  idMode = '';
 
     refs: JoinRef[] = [];
 
