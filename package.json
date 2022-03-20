@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@quenk/noni": "^1.40.14",
-    "@quenk/noni-mongodb": "^0.3.5",
+    "@quenk/noni-mongodb": "^0.4.0",
     "@quenk/tendril": "^0.43.1"
   }
 }
